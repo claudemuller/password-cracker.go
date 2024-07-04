@@ -2,6 +2,8 @@
 
 [![go](https://github.com/claudemuller/password-cracker.go/actions/workflows/go.yml/badge.svg)](https://github.com/claudemuller/password-cracker.go/actions/workflows/go.yml)
 
+![cracker](image.jpg)
+
 A password cracker written in Go.
 
 ## Crack a Password
