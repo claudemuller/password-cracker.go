@@ -6,7 +6,7 @@ A password cracker written in Go.
 
 ## Crack a Password
 
-### Incremental mode
+### Incremental Mode
 
 - Similar to John the Ripper's incremental mode
 - *This is the default mode*
@@ -20,12 +20,28 @@ make run ARGS="-mode incremental -password <password_hash> -maxlen <brute_force_
 make run ARGS="-password <password_hash>"
 ```
 
-### Dictionary mode
+### Dictionary Mode
 
 - using a wordlist
 
 ```bash
 make run ARGS="-mode dictionary -password <password_hash> -wordlist <the_wordlist.txt>"
+```
+
+### Rainbow Table Mode
+
+- using a Rainbow Table
+
+```bash
+make run ARGS="-mode rainbow -password <password_hash> -rainbow <rainbow_table.dat>"
+```
+
+#### Generate Rainbow Table
+
+- using a wordlist
+
+```bash
+make run ARGS="-mode genRainbow -wordlist <the_wordlist.txt> -out <rainbow_table.dat>"
 ```
 
 ## Run Tests
