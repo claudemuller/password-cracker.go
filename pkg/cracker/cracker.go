@@ -1,8 +1,10 @@
 package cracker
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"slices"
 	"strings"
 
@@ -14,6 +16,9 @@ type passRes struct {
 	err  error
 }
 
+// Incremental executes an incremental attack against the input hash.
+//
+// Improvements: split the generating of strings to use multiple goroutines concurrently.
 func Incremental(in string, maxLen int) (string, error) {
 	crack := func(in string, maxLen int) <-chan passRes {
 		alphas := []string{
@@ -75,18 +80,38 @@ func Incremental(in string, maxLen int) (string, error) {
 	return res.pass, res.err
 }
 
-func Dictionary(in, wordlist string) (string, error) {
-	crack := func(in string, maxLen int) <-chan passRes {
+// Dictionary executes a dictionary attack against the input hash.
+//
+// Improvements: split the file up into blocks and use multiple goroutines concurrently.
+func Dictionary(in string, wordlist io.Reader) (string, error) {
+	crack := func(in string, wordlist io.Reader) <-chan passRes {
 		res := make(chan passRes)
 
 		go func() {
 			defer close(res)
+
+			scanner := bufio.NewScanner(wordlist)
+			scanner.Split(bufio.ScanLines)
+
+			for scanner.Scan() {
+				str := scanner.Text()
+				hash := fmt.Sprintf("%x", md5.Hash([]byte(str)))
+				if in == hash {
+					res <- passRes{str, nil}
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				res <- passRes{"", errors.New("error reading wordlist")}
+			}
+
+			res <- passRes{"", errors.New("password not found")}
 		}()
 
 		return res
 	}
 
-	res := <-crack(in)
+	res := <-crack(in, wordlist)
 
 	return res.pass, res.err
 }

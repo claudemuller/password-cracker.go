@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/claudemuller/password-cracker/pkg/cracker"
 )
@@ -11,10 +12,12 @@ func main() {
 	var mode string
 	var password string
 	var maxLen int
+	var wordlist string
 
 	flag.StringVar(&mode, "mode", "incremental", "the mode to use")
 	flag.StringVar(&password, "password", "", "the password to crack")
-	flag.IntVar(&maxLen, "maxlen", 4, "the maximum length of the brute force attempt")
+	flag.IntVar(&maxLen, "maxlen", 4, "the maximum length of the brute force attempt for incremental attack")
+	flag.StringVar(&wordlist, "wordlist", "", "the wordlist to use for dictionary attack")
 	flag.Parse()
 
 	if password == "" {
@@ -27,7 +30,17 @@ func main() {
 
 	switch mode {
 	case "dictionary":
-		pass, err = cracker.Dictionary(password, "data/wordlist.txt")
+		if wordlist == "" {
+			flag.Usage()
+			return
+		}
+
+		file, err := os.Open(wordlist)
+		if err != nil {
+			panic(err)
+		}
+
+		pass, err = cracker.Dictionary(password, file)
 		if err != nil {
 			fmt.Printf("%s\n", err.Error())
 			return
@@ -41,10 +54,5 @@ func main() {
 		}
 	}
 
-	if pass != "" {
-		println("The password is:", pass)
-		return
-	}
-
-	println("Password not found")
+	println("The password is:", pass)
 }
