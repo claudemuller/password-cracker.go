@@ -4,24 +4,47 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/claudemuller/password-cracker/pkg/md5"
+	"github.com/claudemuller/password-cracker/pkg/cracker"
 )
 
 func main() {
-	var filename string
+	var mode string
+	var password string
+	var maxLen int
 
-	flag.StringVar(&filename, "file", "", "")
+	flag.StringVar(&mode, "mode", "incremental", "the mode to use")
+	flag.StringVar(&password, "password", "", "the password to crack")
+	flag.IntVar(&maxLen, "maxlen", 4, "the maximum length of the brute force attempt")
 	flag.Parse()
 
-	input := "password"
-	message := []byte(input)
-	fmt.Printf("MD5 digest of %s is: %x\n", input, md5.Hash(message))
-	input = "notpassword"
-	message = []byte(input)
-	fmt.Printf("MD5 digest of %s is: %x\n", input, md5.Hash(message))
-
-	if filename == "" {
+	if password == "" {
 		flag.Usage()
 		return
 	}
+
+	var pass string
+	var err error
+
+	switch mode {
+	case "dictionary":
+		pass, err = cracker.Dictionary(password, "data/wordlist.txt")
+		if err != nil {
+			fmt.Printf("%s\n", err.Error())
+			return
+		}
+
+	default:
+		pass, err = cracker.Incremental(password, maxLen)
+		if err != nil {
+			fmt.Printf("%s\n", err.Error())
+			return
+		}
+	}
+
+	if pass != "" {
+		println("The password is:", pass)
+		return
+	}
+
+	println("Password not found")
 }
